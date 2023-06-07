@@ -1,0 +1,15 @@
+{
+  "name": "dtn_lighting",
+  "version": "1.0.0",
+  "description": "Nathan Moore DTN Lighting take home",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run test",
+    "start": "node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "quadkeytools": "^0.0.2"
+  }
+}
