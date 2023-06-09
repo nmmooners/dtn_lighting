@@ -4,8 +4,8 @@
   "description": "Nathan Moore DTN Lighting take home",
   "main": "index.js",
   "scripts": {
-    "test": "npm run test",
-    "start": "node index.js"
+    "start": "node index.js",
+    "lint": "npx eslint index.js"
   },
   "author": "",
   "license": "ISC",

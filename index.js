@@ -49,9 +49,8 @@ function readAssets() {
 // the lighting.json file is read in as well. 
 // the assets are then searched for a matching quadKey and 
 // prints to console "lightning alert for 6720:Dante Street"
-function lightingRead() { 
+function lightingAnalysis() { 
     readAssets().then(assetTree => {
-        console.log('tree is here: ', assetTree.size);
         var jsonArray = [];
         fs.readFile('lightning.json', 'utf8', (err, data) => {
             if(err) {
@@ -67,18 +66,27 @@ function lightingRead() {
             }
             const alreadyAlertArray = [];
             jsonArray.forEach(jsonOjbect => {
-                var qk = getQuadkey(jsonOjbect.longitude, jsonOjbect.latitude);
+                try {
+                   var qk = getQuadkey(jsonOjbect.longitude, jsonOjbect.latitude); 
+                }
+                catch(err){
+                    console.error("was not able to get long and lat");
+                }                
+                // keep track if strike in area already reported 
                 if(!alreadyAlertArray.includes(qk)){
                     assetTree.each(ea => {
                         if(ea.quadKey === qk) {
-                            console.log('lightning alert for ' + ea.assetOwner + ":" + ea.assetName);
-                            alreadyAlertArray.push(qk);
+                            try{
+                                console.log('lightning alert for ' + ea.assetOwner + ":" + ea.assetName);alreadyAlertArray.push(qk);
+                            } catch(err)
+                            {
+                                console.error("Asset information not available");
+                            }                          
                             return;
                         }                                   
                     })                       
                 }               
             });
-            console.log("------- alertAlready: ", alreadyAlertArray.length);
         })
     })
     .catch(err => {
@@ -87,4 +95,4 @@ function lightingRead() {
 }
 
 
-lightingRead();
+lightingAnalysis();
