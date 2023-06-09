@@ -1,71 +1,58 @@
 const fs = require('fs');
+const QKey = require('quadkeytools');
+const binTree = require('bintrees').BinTree;
 
 
+// function to get quadKey using the quadkeytools library
+// parameters:
+// inLong: longitude in degrees
+// inLat: latitude in degrees
+// return: quadKey value determined by long and lat variables
 function getQuadkey(inLong, inLat) {
-    var qk = require('quadkeytools'), location = {lat: inLat, lng: inLong}, detail = 12, key = qk.locationToQuadkey(location, detail);
-    // console.log('###### quadkey: ', key);
+    var location = {lat: inLat, lng: inLong}
+    var detail = 12
+    var key = QKey.locationToQuadkey(location, detail);
     return key;
 }
 
-function getQuadAsset(inQuadKey) {
-    fs.readFile('assets.json', 'utf8', (err, data) => {
-        if(err) {
-            console.error('Error reading assets file: ', err);
-            return;
-        }
-
-        try{
-            var objectCount = 0;
-            const jsonAssetsArray = data.split('\n').filter(line => line.trim() !== '').map(JSON.parse);
-
-            jsonAssetsArray.forEach(jsonObject => {
-                jsonObject.forEach(jsonObject2 => {
-                    console.log('jsonObject2: ', jsonObject2.quadKey);
-                    objectCount++;
-                })
-                
-            })
-        }catch (fileReadError) {
-            console.log('Error Parsing Json File', fileReadError);
-        }
-    });
-}
-
+// function to read in assets.json file and store the assets in 
+// a binary tree. 
+// returns a promise for the completed tree variable to be filled populated
+// if an issue happens with reading in the json object and error is returned in the promise. 
 function readAssets() {
     return new Promise((resolve, reject) => {
-        var binTree = require('bintrees').BinTree;
         var tree = new binTree(function(a,b) {a.quadKey - b.quadKey;});
-
+        var jsonAssetsArray = [{}];
         fs.readFile('assets.json', 'utf8', (err, data) => {
             if(err) {
                 console.error('Error reading assets file: ', err);
                 return;
             }
             try{
-                const jsonAssetsArray = data.split('\n').filter(line => line.trim() !== '').map(JSON.parse);
-
-                jsonAssetsArray.forEach(assets => {
+                jsonAssetsArray = data.split('\n').filter(line => line.trim() !== '').map(JSON.parse);
+            } catch (fileReadError) {
+                console.log('Error Parsing Json File', fileReadError);
+                reject(fileReadError);
+            }
+            jsonAssetsArray.forEach(assets => {
                     assets.forEach(asset => {
                         tree.insert(asset);
                     });
                 });
-
-                console.log('tree was made: ', tree.size);
-                resolve(tree);
-            } catch (fileReadError) {
-                console.log('Error Parsing Json File', fileReadError);
-                reject(fileReadError);
-            };                
+            resolve(tree);               
         });
     });
 }
 
+// main starting function to calculate and find the correct assets for a givin cooridinate
+// function calls readAssets() function and when a successful object is returned 
+// the lighting.json file is read in as well. 
+// the assets are then searched for a matching quadKey and 
+// prints to console "lightning alert for 6720:Dante Street"
 function lightingRead() { 
-
     readAssets().then(assetTree => {
         console.log('tree is here: ', assetTree.size);
-        
-        const alreadyAlertArray = [];
+        var jsonArray = [];
         fs.readFile('lightning.json', 'utf8', (err, data) => {
             if(err) {
                 console.error('Error reading lighting file: ', err);
@@ -73,22 +60,25 @@ function lightingRead() {
             }
             try{
                 // Parse the JSON data into an array of objects
-                const jsonArray = data.split('\n').filter(line => line.trim() !== '').map(JSON.parse);
-                jsonArray.forEach(jsonOjbect => {
-                    qk = getQuadkey(jsonOjbect.longitude, jsonOjbect.latitude);
-                    if(!alreadyAlertArray.includes(qk)){
-                        assetTree.each(ea => {
-                            if(ea.quadKey === qk) {
-                                console.log('Lightning strike for ' + ea.assetOwner + ":" + ea.assetName);
-                                return;
-                            }                                              
-                        })
-                        alreadyAlertArray.push(qk);
-                    }
-                });
+                jsonArray = data.split('\n').filter(line => line.trim() !== '').map(JSON.parse);
+                
             } catch (fileReadError) {
                 console.log('Error Parsing Json File', fileReadError);
             }
+            const alreadyAlertArray = [];
+            jsonArray.forEach(jsonOjbect => {
+                var qk = getQuadkey(jsonOjbect.longitude, jsonOjbect.latitude);
+                if(!alreadyAlertArray.includes(qk)){
+                    assetTree.each(ea => {
+                        if(ea.quadKey === qk) {
+                            console.log('lightning alert for ' + ea.assetOwner + ":" + ea.assetName);
+                            alreadyAlertArray.push(qk);
+                            return;
+                        }                                   
+                    })                       
+                }               
+            });
+            console.log("------- alertAlready: ", alreadyAlertArray.length);
         })
     })
     .catch(err => {
@@ -97,7 +87,4 @@ function lightingRead() {
 }
 
 
-// readAssets();
 lightingRead();
-// assetsRead();
-// lightingAnalysis();
