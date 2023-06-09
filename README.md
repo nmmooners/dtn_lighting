@@ -19,9 +19,9 @@ npm run start
 ```
 
 ### Additional Questions
-    * "What is the time complexity for determining if a strike has occurred for a particular asset?"
-        - O(n) (implented with in order search)
-    * "If we put this code into production, but found it too slow, or it needed to scale to many more users or more frequent strikes, what are the first things you would think of to speed it up?"
+    ###### "What is the time complexity for determining if a strike has occurred for a particular asset?"
+        1. O(n) (implented with in order search)
+    ###### "If we put this code into production, but found it too slow, or it needed to scale to many more users or more frequent strikes, what are the first things you would think of to speed it up?"
         1. First off I would add a function to better compare the objects for matching quadKey value. 
         The current set up has the whole json object in the tree and searching for the whole object using .find() is not usable as I am currently only looking for the quadKey and do not have the assetName or the assethOwner. 
         This would require a new function to only compare the quadKey property. 
